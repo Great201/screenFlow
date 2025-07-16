@@ -22,72 +22,59 @@ async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
   }
 
   const baseUrl = new URL(startUrl).origin;
-  const toVisit = [startUrl];
   const visited = new Set();
   let count = 0;
 
-  while (toVisit.length > 0 && count < 10) {
-    const url = toVisit.shift();
-    if (visited.has(url)) continue;
+  // Visit the home page first
+  try {
+    await page.goto(startUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const pagePath = new URL(page.url()).pathname || '/';
+    const filename = sanitizeFilename(pagePath) + `_${mode}.png`;
+    const filepath = path.join(outDir, filename);
+    await page.screenshot({ path: filepath, fullPage: true });
+    visited.add(page.url());
+    count++;
+  } catch (err) {
+    console.error('Failed to load:', startUrl, err.message);
+    await browser.close();
+    return;
+  }
+
+  // Extract all unique internal links from the home page
+  let links = await page.evaluate((base) => {
+    const found = new Set();
+    document.querySelectorAll('a[href]')
+      .forEach(a => { if (a.href.startsWith(base)) found.add(a.href); });
+    return Array.from(found);
+  }, baseUrl);
+
+  // Limit to 10 pages total (including home)
+  links = links.filter(link => !visited.has(link)).slice(0, 10 - count);
+
+  for (const link of links) {
+    if (count >= 10) break;
     try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-      const pagePath = url.replace(baseUrl, '') || '/';
+      // Go back to home page before each click to reset state
+      await page.goto(startUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      // Find the link and click it
+      await page.evaluate((target) => {
+        const a = Array.from(document.querySelectorAll('a[href]')).find(a => a.href === target);
+        if (a) a.click();
+      }, link);
+      // Wait for URL to change
+      await page.waitForFunction(url => window.location.href === url, { timeout: 10000 }, link);
+      // Wait a bit for content to load
+      await page.waitForTimeout(1000);
+      const pagePath = new URL(page.url()).pathname || '/';
       const filename = sanitizeFilename(pagePath) + `_${mode}.png`;
       const filepath = path.join(outDir, filename);
-      await page.screenshot({ path: filepath, fullPage: true });
-      visited.add(url);
-      count++;
-      // Enhanced link extraction
-      const links = await page.evaluate((base) => {
-        const found = new Set();
-        // <a href>
-        document.querySelectorAll('a[href]')
-          .forEach(a => { if (a.href.startsWith(base)) found.add(a.href); });
-        // [data-href]
-        document.querySelectorAll('[data-href]')
-          .forEach(el => {
-            try {
-              const abs = new URL(el.getAttribute('data-href'), base).href;
-              if (abs.startsWith(base)) found.add(abs);
-            } catch {}
-          });
-        // onclick handlers that set location.href
-        document.querySelectorAll('[onclick]').forEach(el => {
-          const onclick = el.getAttribute('onclick') || '';
-          const match = onclick.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
-          if (match) {
-            try {
-              const abs = new URL(match[1], base).href;
-              if (abs.startsWith(base)) found.add(abs);
-            } catch {}
-          }
-        });
-        // clickable elements (role=button, tabindex)
-        document.querySelectorAll('[role=button], [tabindex]').forEach(el => {
-          // Try href or data-href
-          if (el.hasAttribute('href')) {
-            try {
-              const abs = new URL(el.getAttribute('href'), base).href;
-              if (abs.startsWith(base)) found.add(abs);
-            } catch {}
-          }
-          if (el.hasAttribute('data-href')) {
-            try {
-              const abs = new URL(el.getAttribute('data-href'), base).href;
-              if (abs.startsWith(base)) found.add(abs);
-            } catch {}
-          }
-        });
-        return Array.from(found);
-      }, baseUrl);
-      for (const link of links) {
-        if (!visited.has(link) && !toVisit.includes(link) && toVisit.length + visited.size < 10) {
-          toVisit.push(link);
-        }
+      if (!visited.has(page.url())) {
+        await page.screenshot({ path: filepath, fullPage: true });
+        visited.add(page.url());
+        count++;
       }
     } catch (err) {
-      console.error('Failed to load:', url, err.message);
-      continue;
+      console.error('Failed to click or screenshot:', link, err.message);
     }
   }
   await browser.close();
