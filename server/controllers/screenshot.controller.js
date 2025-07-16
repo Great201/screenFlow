@@ -2,6 +2,7 @@ const { takeScreenshots } = require('../utils/screenshot');
 const { zipFolder } = require('../utils/zip');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
 
 function isValidUrl(url) {
   try {
@@ -29,7 +30,17 @@ exports.handleScreenshot = async (req, res) => {
     const zipPath = path.join(__dirname, '../public', `screenshots_${jobId}.zip`);
     await zipFolder(tmpDir, zipPath);
     const downloadUrl = `/public/screenshots_${jobId}.zip`;
-    res.json({ message: 'Success', downloadUrl });
+    res.json({ message: 'Success!! This link will be deleted in 2 minutes', downloadUrl });
+
+    // Schedule deletion after 2 minutes
+    setTimeout(() => {
+      fs.rm(tmpDir, { recursive: true, force: true }, (err) => {
+        if (err) console.error('Failed to delete tmpDir:', err);
+      });
+      fs.rm(zipPath, { force: true }, (err) => {
+        if (err) console.error('Failed to delete zip file:', err);
+      });
+    }, 2 * 60 * 1000);
   } catch (err) {
     res.status(500).json({ message: 'Error taking screenshot', error: err.message });
   }
