@@ -20,9 +20,14 @@ const Home = () => {
 			toast.error('Add a url to continue !!!');
 			return false;
 		}
-		const isValid = testValidURL(url);
+		// Normalize URL
+		let normalizedUrl = url;
+		if (!/^https?:\/\//i.test(normalizedUrl)) {
+			normalizedUrl = 'https://' + normalizedUrl;
+		}
+		const isValid = testValidURL(normalizedUrl);
 		if (isValid) {
-			navigate(`/shot?url=${url}`)
+			navigate(`/shot?url=${encodeURIComponent(normalizedUrl)}`)
 		} else {
 			toast.error('Invalid URL');
 		}
