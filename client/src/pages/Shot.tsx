@@ -96,14 +96,14 @@ const Shot = () => {
           <img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" />
           <img src="/logo2.png" alt="logo" className="w-1/3 my-2 mx-auto" />
           <button onClick={startCapture} className="text-white font-medium text-sm bg-gradient-to-br from-purple-400 to-rose-400 w-full p-3 my-4 rounded-full flex gap-2 items-center justify-center hover:shadow-md">
-            Capturing {'2/12'}
+            Capturing...
             <PiSpinnerGapBold size={20} className="text-white animate-spin" />
           </button>
           <button onClick={endSession} className="text-xs flex items-center justify-center gap-1 mx-auto my-4 text-neutral-600"><FaTimesCircle size={10} className="text-neutral-600" /> End Session</button>
         </div>}
         {/* popup 3  */}
         {finish && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-3/12 lg:w-3/12 shadow-lg shadow-neutral-500 hidden md:block">
-          <img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" />
+          <Link to={'/'}><img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" /></Link>
           <img src="/logo2.png" alt="logo" className="w-1/2 my-2 mx-auto" />
           <div>
             <Lottie animationData={successAnim} className="w-1/3 mx-auto my-3" />
