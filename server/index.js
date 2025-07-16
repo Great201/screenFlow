@@ -2,8 +2,15 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const screenshotRoutes = require('./routes/screenshot.routes');
+
+// Ensure /public and /tmp exist
+const publicDir = path.join(__dirname, 'public');
+const tmpDir = path.join(__dirname, 'tmp');
+if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
 
 const app = express();
 
