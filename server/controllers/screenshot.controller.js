@@ -14,8 +14,15 @@ function isValidUrl(url) {
 }
 
 exports.handleScreenshot = async (req, res) => {
-  const { url, mode = 'desktop' } = req.body;
-  if (!url || !isValidUrl(url)) {
+  let { url, mode = 'desktop' } = req.body;
+  if (!url) {
+    return res.status(400).json({ message: 'Invalid URL' });
+  }
+  // Normalize URL
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+  if (!isValidUrl(url)) {
     return res.status(400).json({ message: 'Invalid URL' });
   }
   const jobId = uuidv4();
@@ -30,7 +37,7 @@ exports.handleScreenshot = async (req, res) => {
     const zipPath = path.join(__dirname, '../public', `screenshots_${jobId}.zip`);
     await zipFolder(tmpDir, zipPath);
     const downloadUrl = `/public/screenshots_${jobId}.zip`;
-    res.json({ message: 'Success!! This link will be deleted in 5 minutes', downloadUrl });
+    res.json({ message: 'Success', downloadUrl });
 
     // Schedule deletion after 2 minutes
     setTimeout(() => {
@@ -40,7 +47,7 @@ exports.handleScreenshot = async (req, res) => {
       fs.rm(zipPath, { force: true }, (err) => {
         if (err) console.error('Failed to delete zip file:', err);
       });
-    }, 5 * 60 * 1000);
+    }, 2 * 60 * 1000);
   } catch (err) {
     res.status(500).json({ message: 'Error taking screenshot', error: err.message });
   }
