@@ -4,28 +4,33 @@ import React from "react";
 import { FaFile, FaTimesCircle } from "react-icons/fa";
 import { PiFileZipFill, PiSpinnerGapBold } from "react-icons/pi";
 import { RiCameraLensLine, RiTimerFill } from "react-icons/ri";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { BASE_URL } from "../../Utils/data";
 import successAnim from "../assets/success.json";
 
 
 const Shot = () => {
+  const navigate = useNavigate();
   const [start, setStart] = React.useState(false);
   const [finish, setFinish] = React.useState(false);
   const location = useLocation();
-  const [url, setUrl] = React.useState('');
+  const [url, setUrl] = React.useState<string>('');
+  const [mode, setMode] = React.useState<string>('desktop');
+  const [downloadLink, setDownloadLink] = React.useState<string>('')
   // const navigate = useNavigate();
   
 
   const startCapture = async () => {
     try {
       setStart(true);
-      await axios.post('/screenshot', { url })
+      await axios.post(`${BASE_URL}/api/screenshot`, { url, mode })
       .then((res) => {
         if (res.status === 200) {
-          
+          setDownloadLink(res.data?.downloadUrl)
+          setStart(false);
+          setFinish(true);
         }
-        setStart(false);
       })
     } catch (error: any) {
       setStart(false);
@@ -34,7 +39,7 @@ const Shot = () => {
   }
   const endSession = () => {
     try {
-      
+      navigate('/')
     } catch (error: any) {
       toast.error(String(error?.response?.message));
     }
@@ -56,9 +61,9 @@ const Shot = () => {
 			<div className="bg-purple-100 w-full h-screen flex flex-col items-center justify-center">
         {/* popup 1 desktop */}
         {(!start && !finish) && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-4/12 lg:w-3/12 shadow-lg shadow-neutral-500">
-            <img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" />
+            <Link to={'/'}><img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" /></Link>
             <img src="/logo2.png" alt="logo" className="w-1/3 my-2 mx-auto" />
-          <div className="w-full grid grid-cols-2 gap-2">
+          {/* <div className="w-full grid grid-cols-2 gap-2">
             <div className="w-full h-auto border-[1px] border-neutral-200 p-2 rounded-lg">
               <FaFile size={18} className="text-rose-600" />
               <p className="font-normal text-xs my-1">Pages</p>
@@ -69,12 +74,12 @@ const Shot = () => {
               <p className="font-normal text-xs my-1">Time to Capture</p>
               <h2 className="font-black text-xl text-neutral-700 my-2">2 mins</h2>
             </div>
-          </div>
+          </div> */}
           <div className="w-full h-10 my-4 border-[1px] border-neutral-200 rounded-full overflow-hidden">
-            <select className="text-sm p-2 w-full focus:outline-none">
-              <option value={''}>All View (Desktop & Mobile)</option>
-              <option value={''}>Desktop View only</option>
-              <option value={''}>Mobile View only</option>
+            <select className="text-sm p-2 w-full focus:outline-none" onChange={(e) => setMode(e.target.value) }>
+              <option value={'both'}>All View (Desktop & Mobile)</option>
+              <option value={'desktop'}>Desktop View only</option>
+              <option value={'mobile'}>Mobile View only</option>
             </select>
           </div>
           {/* <div className="flex flex-row items-center justify-between">
@@ -108,7 +113,7 @@ const Shot = () => {
           <div>
             <Lottie animationData={successAnim} className="w-1/3 mx-auto my-3" />
             {/* 2  */}
-            <div className="w-full grid grid-cols-2 gap-2">
+            {/* <div className="w-full grid grid-cols-2 gap-2">
               <div className="w-full h-auto border-[1px] border-neutral-200 p-2 rounded-lg">
                 <FaFile size={18} className="text-rose-600" />
                 <p className="font-normal text-xs my-1">Pages</p>
@@ -119,13 +124,13 @@ const Shot = () => {
                 <p className="font-normal text-xs my-1">Time to Capture</p>
                 <h2 className="font-black text-xl text-neutral-700 my-2">2 mins</h2>
               </div>
-            </div>
+            </div> */}
           </div>
             {/* 3  */}
-          <button onClick={() => {}} className="text-white font-medium mx-auto text-sm bg-gradient-to-br from-purple-500 to-rose-500 w-full shadow-md p-3 my-4 rounded-full flex gap-2 items-center justify-center hover:shadow-md">
+          <a href={`${BASE_URL}${downloadLink}`} download={true}><button className="text-white font-medium mx-auto text-sm bg-gradient-to-br from-purple-500 to-rose-500 w-full shadow-md p-3 my-4 rounded-full flex gap-2 items-center justify-center hover:shadow-md">
             <PiFileZipFill size={20} className="text-white" />
             Download Zip
-          </button>
+          </button></a>
         </div>}
       </div>
     </div>
