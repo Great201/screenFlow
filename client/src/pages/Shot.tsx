@@ -1,9 +1,9 @@
 import axios from "axios";
 import Lottie from "lottie-react";
 import React from "react";
-import { FaTimesCircle } from "react-icons/fa";
+import { FaFile, FaTimesCircle } from "react-icons/fa";
 import { PiFileZipFill, PiSpinnerGapBold } from "react-icons/pi";
-import { RiCameraLensLine } from "react-icons/ri";
+import { RiCameraLensLine, RiTimerFill } from "react-icons/ri";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { BASE_URL } from "../../Utils/data";
@@ -58,7 +58,7 @@ const Shot = () => {
         {(!start && !finish) && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-4/12 lg:w-3/12 shadow-lg shadow-neutral-500">
             <Link to={'/'}><img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" /></Link>
             <img src="/logo2.png" alt="logo" className="w-1/3 my-2 mx-auto" />
-          {/* <div className="w-full grid grid-cols-2 gap-2">
+          <div className="w-full grid grid-cols-2 gap-2">
             <div className="w-full h-auto border-[1px] border-neutral-200 p-2 rounded-lg">
               <FaFile size={18} className="text-rose-600" />
               <p className="font-normal text-xs my-1">Pages</p>
@@ -69,7 +69,7 @@ const Shot = () => {
               <p className="font-normal text-xs my-1">Time to Capture</p>
               <h2 className="font-black text-xl text-neutral-700 my-2">2 mins</h2>
             </div>
-          </div> */}
+          </div>
           <div className="w-full h-10 my-4 border-[1px] border-neutral-200 rounded-full overflow-hidden">
             <select className="text-sm p-2 w-full focus:outline-none" onChange={(e) => setMode(e.target.value) }>
               <option value={'both'}>All View (Desktop & Mobile)</option>
@@ -92,7 +92,7 @@ const Shot = () => {
           </button>
         </div>}
         {/* popup 2 desktop*/}
-        {(start && !finish) && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-3/12 lg:w-2/12 shadow-lg shadow-neutral-500 hidden md:block">
+        {(start && !finish) && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-3/12 lg:w-2/12 shadow-lg shadow-neutral-500">
           <img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" />
           <img src="/logo2.png" alt="logo" className="w-1/3 my-2 mx-auto" />
           <button onClick={startCapture} className="text-white font-medium text-sm bg-gradient-to-br from-purple-400 to-rose-400 w-full p-3 my-4 rounded-full flex gap-2 items-center justify-center hover:shadow-md">
@@ -102,7 +102,7 @@ const Shot = () => {
           <button onClick={endSession} className="text-xs flex items-center justify-center gap-1 mx-auto my-4 text-neutral-600"><FaTimesCircle size={10} className="text-neutral-600" /> End Session</button>
         </div>}
         {/* popup 3  */}
-        {finish && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-3/12 lg:w-3/12 shadow-lg shadow-neutral-500 hidden md:block">
+        {finish && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-3/12 lg:w-3/12 shadow-lg shadow-neutral-500">
           <Link to={'/'}><img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" /></Link>
           <img src="/logo2.png" alt="logo" className="w-1/2 my-2 mx-auto" />
           <div>
