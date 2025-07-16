@@ -12,17 +12,30 @@ const allowedOrigins = process.env.URLS
   ? process.env.URLS.split(',').map(url => url.trim())
   : [];
 
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.headers.origin || 'unknown origin'}`);
+  next();
+});
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('CORS: No origin header, allowing request');
+      return callback(null, true);
+    }
     if (allowedOrigins.includes(origin)) {
+      console.log(`CORS: Allowed origin ${origin}`);
       return callback(null, true);
     } else {
+      console.warn(`CORS: Blocked origin ${origin}`);
       return callback(new Error('Not allowed by CORS'));
     }
   }
 }));
+
+app.get('/health', (req, res) => res.send('OK'));
 
 app.use(express.json());
 app.use('/api', screenshotRoutes);
