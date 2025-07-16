@@ -64,7 +64,7 @@ async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
       // Wait for URL to change
       await page.waitForFunction(url => window.location.href === url, { timeout: 10000 }, link);
       // Wait a bit for content to load
-      await page.waitForTimeout(1000);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const pagePath = new URL(page.url()).pathname || '/';
       const filename = sanitizeFilename(pagePath) + `_${mode}.png`;
       const filepath = path.join(outDir, filename);
