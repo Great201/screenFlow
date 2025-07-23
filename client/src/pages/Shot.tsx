@@ -16,8 +16,9 @@ const Shot = () => {
   const [finish, setFinish] = React.useState(false);
   const location = useLocation();
   const [url, setUrl] = React.useState<string>('');
-  const [mode, setMode] = React.useState<string>('desktop');
+  const [mode, setMode] = React.useState<string>('both');
   const [downloadLink, setDownloadLink] = React.useState<string>('');
+  const [skipped, setSkipped] = React.useState<any[]>([]);
   
 
   const startCapture = async () => {
@@ -27,6 +28,7 @@ const Shot = () => {
       .then((res) => {
         if (res.status === 200) {
           setDownloadLink(res.data?.downloadUrl)
+          setSkipped(res.data?.skipped || [])
           setStart(false);
           setFinish(true);
         }
@@ -58,7 +60,7 @@ const Shot = () => {
         {(!start && !finish) && <div className="z-50 rounded-lg p-4 bg-white w-10/12 md:w-4/12 lg:w-3/12 shadow-lg shadow-neutral-500">
             <Link to={'/'}><img src="/logo.png" alt="logo" className="w-8 h-8 mx-auto" /></Link>
             <img src="/logo2.png" alt="logo" className="w-1/3 my-2 mx-auto" />
-          <div className="w-full grid grid-cols-2 gap-2">
+          {/* <div className="w-full grid grid-cols-2 gap-2">
             <div className="w-full h-auto border-[1px] border-neutral-200 p-2 rounded-lg">
               <FaFile size={18} className="text-rose-600" />
               <p className="font-normal text-xs my-1">Pages</p>
@@ -69,7 +71,7 @@ const Shot = () => {
               <p className="font-normal text-xs my-1">Time to Capture</p>
               <h2 className="font-black text-xl text-neutral-700 my-2">2 mins</h2>
             </div>
-          </div>
+          </div> */}
           <div className="w-full h-10 my-4 border-[1px] border-neutral-200 rounded-full overflow-hidden">
             <select className="text-sm p-2 w-full focus:outline-none" onChange={(e) => setMode(e.target.value) }>
               <option value={'both'}>All View (Desktop & Mobile)</option>
@@ -126,6 +128,16 @@ const Shot = () => {
             <PiFileZipFill size={20} className="text-white" />
             Download Zip
           </button></a>
+          {skipped.length > 0 && (
+            <div className="mt-4 p-2 bg-yellow-100 border border-yellow-300 rounded">
+              <p className="text-yellow-800 font-semibold text-sm mb-2">Some pages could not be captured:</p>
+              <ul className="text-xs text-yellow-900 list-disc pl-4">
+                {skipped.map((item, idx) => (
+                  <li key={idx}><span className="font-bold">{item.url}</span>: {item.reason}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>}
       </div>
     </div>

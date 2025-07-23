@@ -8,7 +8,7 @@ function sanitizeFilename(str) {
 
 async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'], protocolTimeout: 60000 });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'], protocolTimeout: 120000 });
   const page = await browser.newPage();
 
   // Set viewport or emulate device
@@ -24,20 +24,33 @@ async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
   const baseUrl = new URL(startUrl).origin;
   const visited = new Set();
   let count = 0;
+  const skipped = [];
 
   // Visit the home page first
   try {
-    await page.goto(startUrl, { waitUntil: 'networkidle2', timeout: 40000 });
+    await page.goto(startUrl, { waitUntil: 'networkidle2', timeout: 60000 });
     const pagePath = new URL(page.url()).pathname || '/';
     const filename = sanitizeFilename(pagePath) + `_${mode}.png`;
     const filepath = path.join(outDir, filename);
-    await page.screenshot({ path: filepath, fullPage: true, timeout: 60000 });
+    try {
+      await page.screenshot({ path: filepath, fullPage: true, timeout: 90000 });
+    } catch (err) {
+      // Fallback to viewport screenshot
+      console.error('Full page screenshot failed, trying viewport:', page.url(), err.message);
+      try {
+        await page.screenshot({ path: filepath, fullPage: false, timeout: 90000 });
+      } catch (err2) {
+        console.error('Viewport screenshot also failed:', page.url(), err2.message);
+        skipped.push({ url: page.url(), reason: err2.message });
+      }
+    }
     visited.add(page.url());
     count++;
   } catch (err) {
     console.error('Failed to load:', startUrl, err.message);
+    skipped.push({ url: startUrl, reason: err.message });
     await browser.close();
-    return;
+    return skipped;
   }
 
   // Extract all unique internal links from the home page
@@ -56,48 +69,55 @@ async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
   for (const link of links) {
     if (count >= 10) break;
     try {
-      // Go back to home page before each click to reset state
-      await page.goto(startUrl, { waitUntil: 'networkidle2', timeout: 40000 });
-      // Save the current main content for later comparison
+      await page.goto(startUrl, { waitUntil: 'networkidle2', timeout: 60000 });
       const prevContent = await page.$eval('body', el => el.innerHTML);
-      // Remove target=_blank to force same-tab navigation
       await page.evaluate((target) => {
         const a = Array.from(document.querySelectorAll('a[href]')).find(a => a.href === target);
         if (a) a.setAttribute('target', '_self');
       }, link);
-      // Find the link and click it
       await page.evaluate((target) => {
         const a = Array.from(document.querySelectorAll('a[href]')).find(a => a.href === target);
         if (a) a.click();
       }, link);
-      // Wait for either URL or DOM/content change
       let navigated = false;
       try {
         await Promise.race([
-          page.waitForFunction(url => window.location.href === url, { timeout: 10000 }, link),
-          page.waitForFunction(prev => document.body.innerHTML !== prev, { timeout: 10000 }, prevContent)
+          page.waitForFunction(url => window.location.href === url, { timeout: 15000 }, link),
+          page.waitForFunction(prev => document.body.innerHTML !== prev, { timeout: 15000 }, prevContent)
         ]);
         navigated = true;
       } catch (e) {
-        // If neither happened, log and skip
         console.error('Navigation or DOM change did not occur for:', link);
+        skipped.push({ url: link, reason: 'Navigation or DOM change did not occur' });
       }
-      // Wait for networkidle2 and a short delay
-      await page.waitForNetworkIdle({ idleTime: 1000, timeout: 15000 }).catch(() => {});
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await page.waitForNetworkIdle({ idleTime: 1000, timeout: 20000 }).catch(() => {});
+      await new Promise(resolve => setTimeout(resolve, 2000));
       const pagePath = new URL(page.url()).pathname || '/';
       const filename = sanitizeFilename(pagePath) + `_${mode}.png`;
       const filepath = path.join(outDir, filename);
       if (!visited.has(page.url()) && navigated) {
-        await page.screenshot({ path: filepath, fullPage: true, timeout: 60000 });
+        try {
+          await page.screenshot({ path: filepath, fullPage: true, timeout: 90000 });
+        } catch (err) {
+          // Fallback to viewport screenshot
+          console.error('Full page screenshot failed, trying viewport:', page.url(), err.message);
+          try {
+            await page.screenshot({ path: filepath, fullPage: false, timeout: 90000 });
+          } catch (err2) {
+            console.error('Viewport screenshot also failed:', page.url(), err2.message);
+            skipped.push({ url: page.url(), reason: err2.message });
+          }
+        }
         visited.add(page.url());
         count++;
       }
     } catch (err) {
       console.error('Failed to click or screenshot:', link, err.message);
+      skipped.push({ url: link, reason: err.message });
     }
   }
   await browser.close();
+  return skipped;
 }
 
 module.exports = { takeScreenshots }; 

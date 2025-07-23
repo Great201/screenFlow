@@ -28,16 +28,18 @@ exports.handleScreenshot = async (req, res) => {
   const jobId = uuidv4();
   const tmpDir = path.join(__dirname, '../tmp', jobId);
   try {
+    let skipped = [];
     if (mode === 'both') {
-      await takeScreenshots(url, tmpDir, 'desktop');
-      await takeScreenshots(url, tmpDir, 'mobile');
+      const skippedDesktop = await takeScreenshots(url, tmpDir, 'desktop');
+      const skippedMobile = await takeScreenshots(url, tmpDir, 'mobile');
+      skipped = [...(skippedDesktop || []), ...(skippedMobile || [])];
     } else {
-      await takeScreenshots(url, tmpDir, mode);
+      skipped = await takeScreenshots(url, tmpDir, mode);
     }
     const zipPath = path.join(__dirname, '../public', `screenshots_${jobId}.zip`);
     await zipFolder(tmpDir, zipPath);
     const downloadUrl = `/public/screenshots_${jobId}.zip`;
-    res.json({ message: 'Success', downloadUrl });
+    res.json({ message: 'Success', downloadUrl, skipped });
 
     // Schedule deletion after 2 minutes
     setTimeout(() => {
