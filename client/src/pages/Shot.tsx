@@ -1,9 +1,9 @@
 import axios from "axios";
 import Lottie from "lottie-react";
 import React from "react";
-import { FaFile, FaTimesCircle } from "react-icons/fa";
+import { FaTimesCircle } from "react-icons/fa";
 import { PiFileZipFill, PiSpinnerGapBold } from "react-icons/pi";
-import { RiCameraLensLine, RiTimerFill } from "react-icons/ri";
+import { RiCameraLensLine } from "react-icons/ri";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { BASE_URL } from "../../Utils/data";
