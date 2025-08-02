@@ -1,4 +1,4 @@
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
 import './App.css'
 import Layout from './Components/Layout'
@@ -16,8 +16,8 @@ function App() {
   )
   return (
     <>
-     <Analytics />
     <RouterProvider router={router} />
+    <Analytics />
     </>
   )
 }
