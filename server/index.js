@@ -65,7 +65,7 @@ app.use((err, req, res, next) => {
 });
 
 // Handle 404s
-app.use('*', (req, res) => {
+app.use((req, res) => {
   const timestamp = new Date().toISOString();
   console.warn(`[${timestamp}] 404: ${req.method} ${req.originalUrl} not found`);
   res.status(404).json({ 
