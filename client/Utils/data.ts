@@ -1,1 +1,1 @@
-export const BASE_URL = "https://screenflow-production.up.railway.app"
+export const BASE_URL = "http://18.226.88.104:3000"
