@@ -20,7 +20,16 @@ async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
     console.log(`[${timestamp}] Launching Puppeteer browser`);
     browser = await puppeteer.launch({ 
       headless: true, 
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], 
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ], 
       protocolTimeout: 120000 
     });
     console.log(`[${timestamp}] Browser launched successfully`);
