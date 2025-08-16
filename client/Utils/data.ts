@@ -1,1 +1,1 @@
-export const BASE_URL = "http://18.226.88.104:3000"
+export const BASE_URL = "https://neonebot.com"
