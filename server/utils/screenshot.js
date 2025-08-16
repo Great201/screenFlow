@@ -18,7 +18,9 @@ async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
   let browser;
   try {
     console.log(`[${timestamp}] Launching Puppeteer browser`);
-    browser = await puppeteer.launch({ 
+    
+    // Try to use system Chrome first, fallback to bundled version
+    let launchOptions = {
       headless: true, 
       args: [
         '--no-sandbox', 
@@ -31,7 +33,26 @@ async function takeScreenshots(startUrl, outDir, mode = 'desktop') {
         '--disable-gpu'
       ], 
       protocolTimeout: 120000 
-    });
+    };
+    
+    // Try to find system Chrome installation
+    const fs = require('fs');
+    const possibleChromePaths = [
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium'
+    ];
+    
+    for (const chromePath of possibleChromePaths) {
+      if (fs.existsSync(chromePath)) {
+        console.log(`[${timestamp}] Using system Chrome: ${chromePath}`);
+        launchOptions.executablePath = chromePath;
+        break;
+      }
+    }
+    
+    browser = await puppeteer.launch(launchOptions);
     console.log(`[${timestamp}] Browser launched successfully`);
   } catch (err) {
     console.error(`[${timestamp}] Failed to launch browser:`, err);
